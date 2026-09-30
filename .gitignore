@@ -1,0 +1,21 @@
+# виртуальное окружение
+.venv/
+venv/
+env/
+
+# Python кэш
+__pycache__/
+*.pyc
+*.pyo
+
+# локальные данные
+data.json
+data.json.tmp
+
+# системное
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

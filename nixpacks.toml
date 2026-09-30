@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["chromium", "chromedriver", "nss", "libx11", "libxcomposite", "libxdamage", "libxrandr", "libgbm", "libasound"]
+
+[start]
+cmd = "python main.py"

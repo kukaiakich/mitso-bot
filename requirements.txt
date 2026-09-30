@@ -1,0 +1,3 @@
+selenium
+pyTelegramBotAPI
+beautifulsoup4
