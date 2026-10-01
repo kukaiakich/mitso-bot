@@ -1,5 +1,4 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,8 +14,10 @@ import threading
 from datetime import datetime, timedelta
 
 API_KEY = os.environ.get('TELEGRAM_BOT_TOKEN', '6091897495:AAGNE4b5SnIF_oEQCSFEwn42f2dmNwbOzOE')
+BROWSERLESS_TOKEN = os.environ.get('BROWSERLESS_TOKEN')
 
 URL = "https://apps.mitso.by/frontend/web/schedule/group-schedule"
+BROWSERLESS_URL = "https://chrome.browserless.io/webdriver"
 
 if os.path.isdir('/data'):
     DATA_FILE = '/data/data.json'
@@ -24,7 +25,7 @@ else:
     DATA_FILE = 'data.json'
 
 
-# ================== SELENIUM ==================
+# ================== SELENIUM (Browserless) ==================
 
 def wait_option(driver, select_id, text, timeout=15):
     WebDriverWait(driver, timeout).until(
@@ -35,29 +36,25 @@ def wait_option(driver, select_id, text, timeout=15):
 
 
 def fetch_html_once():
-    """Одна попытка: открыть браузер, спарсить, вернуть html."""
-    options = Options()
-
-    options.add_argument(
-        '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    )
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-
+    """Одна попытка: подключиться к Browserless, спарсить, вернуть html."""
+    options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
-    options.add_argument('--disable-software-rasterizer')
-    options.add_argument('--disable-extensions')
-    options.add_argument('--disable-background-networking')
     options.add_argument('--window-size=1920,1080')
+    options.add_argument(
+        '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    )
+    options.set_capability('browserless:token', BROWSERLESS_TOKEN)
 
     driver = None
     try:
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Remote(
+            command_executor=BROWSERLESS_URL,
+            options=options
+        )
 
         driver.execute_script(
             "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
