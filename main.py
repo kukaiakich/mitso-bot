@@ -1,6 +1,6 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -25,7 +25,7 @@ else:
     DATA_FILE = 'data.json'
 
 
-# ================== SELENIUM ==================
+# ================== SELENIUM (Firefox) ==================
 
 def wait_option(driver, select_id, text, timeout=20):
     WebDriverWait(driver, timeout).until(
@@ -38,42 +38,82 @@ def wait_option(driver, select_id, text, timeout=20):
 def fetch_html_once():
     options = Options()
 
-    chrome_bin = os.environ.get('CHROME_BIN')
-    if chrome_bin and os.path.exists(chrome_bin):
-        options.binary_location = chrome_bin
+    firefox_bin = os.environ.get('FIREFOX_BIN')
+    if firefox_bin and os.path.exists(firefox_bin):
+        options.binary_location = firefox_bin
 
-    options.add_argument(
-        '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-        '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    # headless
+    options.add_argument('--headless')
+    options.add_argument('--width=1280')
+    options.add_argument('--height=800')
+
+    # === ЭКОНОМИЯ ПАМЯТИ ===
+    options.set_preference('dom.ipc.processCount', 1)          # один контент-процесс
+    options.set_preference('dom.ipc.processCount.webIsolated', 1)
+    options.set_preference('browser.tabs.remote.autostart', False)
+    options.set_preference('browser.tabs.remote.autostart.2', False)
+
+    # отключаем картинки и медиа
+    options.set_preference('permissions.default.image', 2)      # 2 = блокировать картинки
+    options.set_preference('permissions.default.stylesheet', 1)
+    options.set_preference('permissions.default.script', 1)
+    options.set_preference('media.autoplay.default', 5)
+    options.set_preference('media.autoplay.blocking_policy', 2)
+    options.set_preference('media.peerconnection.enabled', False)
+    options.set_preference('media.navigator.enabled', False)
+
+    # отключаем фоновые сервисы
+    options.set_preference('browser.safebrowsing.enabled', False)
+    options.set_preference('browser.safebrowsing.malware.enabled', False)
+    options.set_preference('browser.safebrowsing.phishing.enabled', False)
+    options.set_preference('browser.safebrowsing.downloads.enabled', False)
+    options.set_preference('browser.safebrowsing.downloads.remote.enabled', False)
+    options.set_preference('browser.newtabpage.enabled', False)
+    options.set_preference('browser.newtabpage.activity-stream.feeds.telemetry', False)
+    options.set_preference('browser.newtabpage.activity-stream.telemetry', False)
+    options.set_preference('browser.ping-centre.telemetry', False)
+    options.set_preference('toolkit.telemetry.enabled', False)
+    options.set_preference('toolkit.telemetry.unified', False)
+    options.set_preference('toolkit.telemetry.archive.enabled', False)
+    options.set_preference('datareporting.healthreport.uploadEnabled', False)
+    options.set_preference('datareporting.policy.dataSubmissionEnabled', False)
+    options.set_preference('app.shield.optoutstudies.enabled', False)
+    options.set_preference('app.update.enabled', False)
+    options.set_preference('app.update.auto', False)
+    options.set_preference('extensions.update.enabled', False)
+    options.set_preference('browser.search.update', False)
+    options.set_preference('browser.sessionstore.resume_from_crash', False)
+    options.set_preference('browser.startup.page', 0)
+    options.set_preference('browser.shell.checkDefaultBrowser', False)
+
+    # отключаем рендеринг, который не нужен
+    options.set_preference('gfx.webrender.all', False)
+    options.set_preference('layers.acceleration.disabled', True)
+    options.set_preference('gfx.canvas.accelerated', False)
+    options.set_preference('webgl.disabled', True)
+    options.set_preference('dom.webgl.enabled', False)
+
+    # спрятать webdriver
+    options.set_preference('dom.webdriver.enabled', False)
+    options.set_preference('useAutomationExtension', False)
+
+    # UA
+    options.set_preference(
+        'general.useragent.override',
+        'Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0'
     )
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-
-    # headless — браузер не открывается, всё работает в фоне
-    options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-setuid-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--disable-software-rasterizer')
-    options.add_argument('--disable-extensions')
-    options.add_argument('--log-level=3')
-    options.add_argument('--silent')
-    options.add_argument('--window-size=1920,1080')
 
     driver = None
     try:
-        driver_path = os.environ.get('CHROMEDRIVER_PATH')
-        if driver_path and os.path.exists(driver_path):
-            service = Service(driver_path)
-            driver = webdriver.Chrome(service=service, options=options)
+        gecko_path = os.environ.get('GECKODRIVER_PATH')
+        if gecko_path and os.path.exists(gecko_path):
+            service = Service(gecko_path)
+            driver = webdriver.Firefox(service=service, options=options)
         else:
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Firefox(options=options)
 
-        driver.execute_script(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-        )
+        driver.set_page_load_timeout(45)
+
         driver.get(URL)
 
         wait_option(driver, "faculty-id", "Юридический")
@@ -99,7 +139,7 @@ def fetch_html_once():
         WebDriverWait(driver, 25).until(
             EC.presence_of_element_located((By.XPATH, '//div[contains(@class,"table-responsive")]'))
         )
-        time.sleep(2)
+        time.sleep(1)
 
         return driver.page_source
 
