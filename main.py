@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -19,7 +18,6 @@ API_KEY = os.environ.get('TELEGRAM_BOT_TOKEN', '6091897495:AAGNE4b5SnIF_oEQCSFEw
 
 URL = "https://apps.mitso.by/frontend/web/schedule/group-schedule"
 
-# Файл данных: на Railway монтируется Volume в /data, локально пишем рядом со скриптом
 if os.path.isdir('/data'):
     DATA_FILE = '/data/data.json'
 else:
@@ -40,11 +38,6 @@ def fetch_html_once():
     """Одна попытка: открыть браузер, спарсить, вернуть html."""
     options = Options()
 
-    # путь к chromium на сервере (задан в Dockerfile)
-    chrome_bin = os.environ.get('CHROME_BIN')
-    if chrome_bin and os.path.exists(chrome_bin):
-        options.binary_location = chrome_bin
-
     options.add_argument(
         '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
         'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
@@ -53,23 +46,18 @@ def fetch_html_once():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
-    # headless + фиксы для контейнера
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    options.add_argument('--disable-software-rasterizer')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-background-networking')
     options.add_argument('--window-size=1920,1080')
-    options.add_argument('--remote-debugging-port=9222')
-    options.add_argument('--single-process')
 
     driver = None
     try:
-        driver_path = os.environ.get('CHROMEDRIVER_PATH')
-        if driver_path and os.path.exists(driver_path):
-            service = Service(driver_path)
-            driver = webdriver.Chrome(service=service, options=options)
-        else:
-            driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(options=options)
 
         driver.execute_script(
             "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
@@ -294,9 +282,9 @@ def format_day(title, rows):
 
 bot = telebot.TeleBot(API_KEY)
 
-user_teachers = {}   # chat_id -> {'ija1': '...', 'ija2': '...'}
-broadcasts = {}      # chat_id -> 'HH:MM'
-last_sent = {}       # chat_id -> 'YYYY-MM-DD HH:MM'
+user_teachers = {}
+broadcasts = {}
+last_sent = {}
 
 
 def save_data():
