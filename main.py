@@ -42,62 +42,15 @@ def fetch_html_once():
     if firefox_bin and os.path.exists(firefox_bin):
         options.binary_location = firefox_bin
 
-    # headless
-    options.add_argument('--headless')
+    options.add_argument('-headless')
     options.add_argument('--width=1280')
     options.add_argument('--height=800')
 
-    # === ЭКОНОМИЯ ПАМЯТИ ===
-    options.set_preference('dom.ipc.processCount', 1)          # один контент-процесс
-    options.set_preference('dom.ipc.processCount.webIsolated', 1)
-    options.set_preference('browser.tabs.remote.autostart', False)
-    options.set_preference('browser.tabs.remote.autostart.2', False)
-
-    # отключаем картинки и медиа
-    options.set_preference('permissions.default.image', 2)      # 2 = блокировать картинки
-    options.set_preference('permissions.default.stylesheet', 1)
-    options.set_preference('permissions.default.script', 1)
-    options.set_preference('media.autoplay.default', 5)
-    options.set_preference('media.autoplay.blocking_policy', 2)
-    options.set_preference('media.peerconnection.enabled', False)
-    options.set_preference('media.navigator.enabled', False)
-
-    # отключаем фоновые сервисы
-    options.set_preference('browser.safebrowsing.enabled', False)
-    options.set_preference('browser.safebrowsing.malware.enabled', False)
-    options.set_preference('browser.safebrowsing.phishing.enabled', False)
-    options.set_preference('browser.safebrowsing.downloads.enabled', False)
-    options.set_preference('browser.safebrowsing.downloads.remote.enabled', False)
-    options.set_preference('browser.newtabpage.enabled', False)
-    options.set_preference('browser.newtabpage.activity-stream.feeds.telemetry', False)
-    options.set_preference('browser.newtabpage.activity-stream.telemetry', False)
-    options.set_preference('browser.ping-centre.telemetry', False)
-    options.set_preference('toolkit.telemetry.enabled', False)
-    options.set_preference('toolkit.telemetry.unified', False)
-    options.set_preference('toolkit.telemetry.archive.enabled', False)
-    options.set_preference('datareporting.healthreport.uploadEnabled', False)
-    options.set_preference('datareporting.policy.dataSubmissionEnabled', False)
-    options.set_preference('app.shield.optoutstudies.enabled', False)
-    options.set_preference('app.update.enabled', False)
-    options.set_preference('app.update.auto', False)
-    options.set_preference('extensions.update.enabled', False)
-    options.set_preference('browser.search.update', False)
-    options.set_preference('browser.sessionstore.resume_from_crash', False)
-    options.set_preference('browser.startup.page', 0)
-    options.set_preference('browser.shell.checkDefaultBrowser', False)
-
-    # отключаем рендеринг, который не нужен
-    options.set_preference('gfx.webrender.all', False)
-    options.set_preference('layers.acceleration.disabled', True)
-    options.set_preference('gfx.canvas.accelerated', False)
-    options.set_preference('webgl.disabled', True)
-    options.set_preference('dom.webgl.enabled', False)
-
-    # спрятать webdriver
+    # минимальный набор — без агрессивных prefs
+    options.set_preference('permissions.default.image', 2)
+    options.set_preference('dom.ipc.processCount', 1)
     options.set_preference('dom.webdriver.enabled', False)
     options.set_preference('useAutomationExtension', False)
-
-    # UA
     options.set_preference(
         'general.useragent.override',
         'Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0'
@@ -113,7 +66,6 @@ def fetch_html_once():
             driver = webdriver.Firefox(options=options)
 
         driver.set_page_load_timeout(45)
-
         driver.get(URL)
 
         wait_option(driver, "faculty-id", "Юридический")
