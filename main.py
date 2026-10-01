@@ -1,6 +1,5 @@
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -25,7 +24,7 @@ else:
     DATA_FILE = 'data.json'
 
 
-# ================== SELENIUM (Firefox) ==================
+# ================== SELENIUM ==================
 
 def wait_option(driver, select_id, text, timeout=20):
     WebDriverWait(driver, timeout).until(
@@ -38,34 +37,48 @@ def wait_option(driver, select_id, text, timeout=20):
 def fetch_html_once():
     options = Options()
 
-    firefox_bin = os.environ.get('FIREFOX_BIN')
-    if firefox_bin and os.path.exists(firefox_bin):
-        options.binary_location = firefox_bin
-
-    options.add_argument('-headless')
-    options.add_argument('--width=1280')
-    options.add_argument('--height=800')
-
-    # минимальный набор — без агрессивных prefs
-    options.set_preference('permissions.default.image', 2)
-    options.set_preference('dom.ipc.processCount', 1)
-    options.set_preference('dom.webdriver.enabled', False)
-    options.set_preference('useAutomationExtension', False)
-    options.set_preference(
-        'general.useragent.override',
-        'Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0'
+    options.add_argument('--headless=new')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-setuid-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-software-rasterizer')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-logging')
+    options.add_argument('--log-level=3')
+    options.add_argument('--silent')
+    options.add_argument('--no-default-browser-check')
+    options.add_argument('--no-first-run')
+    options.add_argument('--disable-background-networking')
+    options.add_argument('--disable-sync')
+    options.add_argument('--disable-translate')
+    options.add_argument('--hide-scrollbars')
+    options.add_argument('--mute-audio')
+    options.add_argument('--renderer-process-limit=1')
+    options.add_argument('--blink-settings=imagesEnabled=false')
+    options.add_argument('--window-size=1280,800')
+    options.add_argument(
+        '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+        '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     )
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,
+        "profile.default_content_setting_values.notifications": 2,
+        "profile.default_content_setting_values.geolocation": 2,
+    }
+    options.add_experimental_option("prefs", prefs)
 
     driver = None
     try:
-        gecko_path = os.environ.get('GECKODRIVER_PATH')
-        if gecko_path and os.path.exists(gecko_path):
-            service = Service(gecko_path)
-            driver = webdriver.Firefox(service=service, options=options)
-        else:
-            driver = webdriver.Firefox(options=options)
-
+        driver = webdriver.Chrome(options=options)
         driver.set_page_load_timeout(45)
+        driver.execute_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+        )
         driver.get(URL)
 
         wait_option(driver, "faculty-id", "Юридический")
