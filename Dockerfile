@@ -1,16 +1,14 @@
-FROM selenium/standalone-chrome:latest
-
-USER root
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.12-slim
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 
-CMD ["python3", "main.py"]
+VOLUME ["/data"]
+
+CMD ["python", "main.py"]

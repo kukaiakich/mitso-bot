@@ -1,3 +1,6 @@
-selenium
-pyTelegramBotAPI
+requests
 beautifulsoup4
+pyTelegramBotAPI
+certifi
+python-dotenv
+truststore
