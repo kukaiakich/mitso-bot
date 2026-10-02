@@ -218,7 +218,11 @@ def fetch_html_once():
     group_option = next(
         (
             option for option in group_options
-            if normalize_text(option.get("name", "")) == normalize_text("2440 МП")
+            if re.sub(
+                r"[^a-zа-яё0-9]",
+                "",
+                normalize_text(option.get("name", "")),
+            ).replace("мп", "mp") == "2440mp"
         ),
         None,
     )
