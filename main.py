@@ -4,6 +4,7 @@ import re
 import threading
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import truststore
 truststore.inject_into_ssl()
@@ -37,6 +38,8 @@ if os.path.isdir("/data"):
 else:
     DATA_FILE = "data.json"
 
+
+TZ = ZoneInfo("Europe/Minsk")
 
 # ================== ПОЛУЧЕНИЕ HTML ЧЕРЕЗ REQUESTS ==================
 
@@ -407,7 +410,7 @@ def date_from_title(title, default_year=None):
     if not month:
         return None
 
-    year = default_year or datetime.now().year
+    year = default_year or datetime.now(TZ).year
 
     try:
         return datetime(year, month, day).date()
@@ -1021,7 +1024,7 @@ def button_reset(message):
 def broadcast_loop():
     while True:
         try:
-            now = datetime.now()
+            now = datetime.now(TZ)
             current_time = now.strftime("%H:%M")
             day_key = (
                 now.strftime("%Y-%m-%d")
@@ -1083,3 +1086,5 @@ bot.infinity_polling(
     timeout=30,
     long_polling_timeout=30,
 )
+
+print (date_from_title)
