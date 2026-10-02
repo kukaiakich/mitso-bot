@@ -11,6 +11,7 @@ truststore.inject_into_ssl()
 import certifi
 import requests
 import telebot
+import urllib3
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from telebot import types
@@ -56,12 +57,12 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
-
 def create_session():
     session = requests.Session()
 
     if os.name != "nt":
-        session.verify = certifi.where()
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        session.verify = False
 
     retry = Retry(
         total=3,
