@@ -8,6 +8,7 @@ from datetime import datetime
 import truststore
 truststore.inject_into_ssl()
 
+import certifi
 import requests
 import telebot
 from bs4 import BeautifulSoup
@@ -59,6 +60,8 @@ HEADERS = {
 def create_session():
     session = requests.Session()
 
+    if os.name != "nt":
+        session.verify = certifi.where()
 
     retry = Retry(
         total=3,
